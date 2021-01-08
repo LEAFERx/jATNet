@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TcpTestGateway {
-  public static void main(String[] args) throws InterruptedException, PcapNativeException, NotOpenException, UnknownHostException {
+  public static void main(String[] args) throws InterruptedException, PcapNativeException, NotOpenException, UnknownHostException, IllegalRawDataException {
 
     PcapNetworkInterface nif;
     try {
@@ -48,7 +48,7 @@ public class TcpTestGateway {
     final PcapHandle sendHandle = nif.openLive(65536, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10);
     captureHandle.setFilter("tcp", BpfProgram.BpfCompileMode.OPTIMIZE);
 
-    UnknownPacket.Builder payloadBuilder = new UnknownPacket.Builder();
+    TcpPacket.Builder tcpBuilder = new TcpPacket.Builder();
     IpV4Packet.Builder ipv4Builder = new IpV4Packet.Builder();
     ipv4Builder
         .srcAddr(address)
@@ -57,7 +57,7 @@ public class TcpTestGateway {
         .ttl((byte) 100)
         .protocol(IpNumber.TCP)
         .identification((short) 100)
-        .payloadBuilder(payloadBuilder)
+        .payloadBuilder(tcpBuilder)
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true);
     EthernetPacket.Builder ethernetBuilder = new EthernetPacket.Builder();
@@ -76,7 +76,7 @@ public class TcpTestGateway {
     AthernetAddress gatewayAddr = new AthernetAddress(new byte[]{(byte) 192, (byte) 168, 1, 1});
     AthernetAddress nodeAddr = new AthernetAddress(new byte[]{(byte) 192, (byte) 168, 1, 2});
 
-    Mac mac = new Mac(gatewayMacAddr, frameSize, 200, 10);
+    Mac mac = new Mac(gatewayMacAddr, frameSize, 400, 10);
     Athernet athernet = new Athernet(gatewayAddr, mac);
 
     final PacketListener listener = packet -> {
@@ -111,9 +111,31 @@ public class TcpTestGateway {
 
     while (true) {
       AthernetPacket athernetPacket = athernet.receive();
-      System.out.println(Arrays.toString(athernetPacket.getPayload()));
-      payloadBuilder.rawData(athernetPacket.getPayload());
-      ipv4Builder.dstAddr((Inet4Address) InetAddress.getByAddress(athernetPacket.getDstAddr().toBytes()));
+      byte[] rawData = athernetPacket.getPayload();
+      Inet4Address dstAddr = (Inet4Address) InetAddress.getByAddress(athernetPacket.getDstAddr().toBytes());
+      System.out.println(Arrays.toString(rawData));
+      TcpPacket tcpPacket = TcpPacket.newPacket(rawData, 0, rawData.length);
+      TcpPacket.TcpHeader header = tcpPacket.getHeader();
+      tcpBuilder
+          .srcAddr(address)
+          .dstAddr(dstAddr)
+          .srcPort(header.getSrcPort())
+          .dstPort(header.getDstPort())
+          .sequenceNumber(header.getSequenceNumber())
+          .acknowledgmentNumber(header.getAcknowledgmentNumber())
+          .dataOffset(header.getDataOffset())
+          .urg(header.getUrg())
+          .ack(header.getAck())
+          .psh(header.getPsh())
+          .rst(header.getRst())
+          .syn(header.getSyn())
+          .fin(header.getFin())
+          .window(header.getWindow())
+          .urgentPointer(header.getUrgentPointer())
+          .options(header.getOptions())
+          .correctChecksumAtBuild(true)
+          .correctLengthAtBuild(true);
+      ipv4Builder.dstAddr(dstAddr);
       EthernetPacket packet = ethernetBuilder.build();
       sendHandle.sendPacket(packet);
     }
