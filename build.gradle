@@ -53,6 +53,21 @@ task testMacTx(type: JavaExec) {
     args 'tx'
 }
 
+task testAthernetRx(type: JavaExec) {
+    group = 'test'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.athernet.AthernetTest'
+    systemProperty 'java.library.path', 'libs/asio'
+    args 'rx'
+}
+
+task testAthernetTx(type: JavaExec) {
+    group = 'test'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.athernet.AthernetTest'
+    systemProperty 'java.library.path', 'libs/asio'
+    args 'tx'
+}
 
 task testMacRx(type: JavaExec) {
     group = 'test'

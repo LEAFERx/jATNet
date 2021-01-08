@@ -25,7 +25,7 @@ public class Mac implements Runnable {
 
   public Mac(int addr, int frameSize, long ACKTimeout, int maxRetransmitTimes) {
     this.addr = addr;
-    this.frameSize = frameSize + 3;
+    this.frameSize = frameSize + 2;
     this.ACKTimeout = ACKTimeout;
     this.maxRetransmitTimes = maxRetransmitTimes;
 
@@ -104,6 +104,12 @@ public class Mac implements Runnable {
     return txResultBuffer.take();
   }
 
+  public boolean write(int dest, byte[] data, int flags) throws InterruptedException {
+    MacFrame frame = new MacFrame(dest, addr, MacFrameType.DATA, flags, data);
+    txFrameBuffer.put(frame);
+    return txResultBuffer.take();
+  }
+
   @Override
   public void run() {
     while (!Thread.currentThread().isInterrupted()) {
@@ -157,5 +163,9 @@ public class Mac implements Runnable {
 
   private void sendACK(int dest) throws InterruptedException {
     phy.write(new MacFrame(dest, addr, MacFrameType.ACK, 0, ACKData).toBytes());
+  }
+
+  public int getFramePayloadSize() {
+    return frameSize - 2;
   }
 }
