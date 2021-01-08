@@ -13,7 +13,7 @@ public class AthernetPacket {
   private final short length;
   private final byte[] payload;
 
-  AthernetPacket(AthernetAddress srcAddr, AthernetAddress dstAddr, byte[] payload) {
+  public AthernetPacket(AthernetAddress srcAddr, AthernetAddress dstAddr, byte[] payload) {
     this.srcAddr = srcAddr;
     this.dstAddr = dstAddr;
     this.length = (short) (payload.length + 10);

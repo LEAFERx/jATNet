@@ -69,6 +69,14 @@ task testAthernetTx(type: JavaExec) {
     args 'tx'
 }
 
+task testTcpAthernetNode(type: JavaExec) {
+    group = 'test'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.tcp.TcpTestAthernetNode'
+    systemProperty 'java.library.path', 'libs/asio'
+    args 'tx'
+}
+
 task testMacRx(type: JavaExec) {
     group = 'test'
     classpath = sourceSets.main.runtimeClasspath

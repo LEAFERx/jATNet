@@ -14,7 +14,7 @@ public class Athernet {
 
   private boolean started = false;
 
-  Athernet(AthernetAddress addr, Mac mac) {
+  public Athernet(AthernetAddress addr, Mac mac) {
     this.addr = addr;
     this.mac = mac;
     this.macFramePayloadSize = mac.getFramePayloadSize();
@@ -38,6 +38,9 @@ public class Athernet {
   }
 
   public boolean send(int dest, AthernetPacket packet) throws InterruptedException {
+    if (!started) {
+      return false;
+    }
     byte[] data = packet.toBytes();
     int frameNums = (int) Math.ceil((double) data.length / macFramePayloadSize);
     for (int i = 0; i < frameNums - 1; i++) {

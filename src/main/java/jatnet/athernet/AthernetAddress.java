@@ -3,7 +3,7 @@ package jatnet.athernet;
 public class AthernetAddress {
   private final byte[] addr;
 
-  AthernetAddress(byte[] addr) {
+  public AthernetAddress(byte[] addr) {
     assert addr.length == 4;
     this.addr = addr;
   }
