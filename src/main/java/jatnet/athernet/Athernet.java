@@ -38,7 +38,6 @@ public class Athernet {
   }
 
   public boolean send(int dest, AthernetPacket packet) throws InterruptedException {
-    System.out.println("macframepayloadsize " + macFramePayloadSize);
     byte[] data = packet.toBytes();
     int frameNums = (int) Math.ceil((double) data.length / macFramePayloadSize);
     for (int i = 0; i < frameNums - 1; i++) {
@@ -48,8 +47,8 @@ public class Athernet {
     }
     return mac.write(
         dest,
-        Arrays.copyOfRange(data, (frameNums - 1) * macFramePayloadSize, data.length),
-        MacFrame.REQUIRE_ACK & MacFrame.DATA_END
+        Arrays.copyOfRange(data, (frameNums - 1) * macFramePayloadSize, frameNums * macFramePayloadSize),
+        MacFrame.REQUIRE_ACK | MacFrame.DATA_END
     );
   }
 

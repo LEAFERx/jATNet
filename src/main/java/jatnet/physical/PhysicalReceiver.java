@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 enum PhysicalReceiverState {
   DETECT,
-  DECODE;
+  DECODE
 }
 
 public class PhysicalReceiver implements Runnable {
@@ -43,7 +43,7 @@ public class PhysicalReceiver implements Runnable {
 
     float[] previousData = null;
 
-    float syncPowerThreshold = 0.1f;
+    float syncPowerThreshold = 0.01f;
 
     while (!Thread.currentThread().isInterrupted()) {
       try {
@@ -84,8 +84,8 @@ public class PhysicalReceiver implements Runnable {
                   decode[j] = data[j - lastCount + startIndex];
                 }
               } else {
-                for (int j = startIndex; j <= dataIndex; j++) {
-                  decode[j - startIndex] = data[j - lastCount];
+                if (dataIndex + 1 - startIndex >= 0) {
+                  System.arraycopy(data, startIndex - lastCount, decode, 0, dataIndex + 1 - startIndex);
                 }
               }
               currentDecodeIndex = dataIndex - startIndex + 1;

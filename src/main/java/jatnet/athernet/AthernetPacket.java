@@ -23,7 +23,7 @@ public class AthernetPacket {
   public static AthernetPacket parse(byte[] data) {
     AthernetAddress srcAddr = new AthernetAddress(Arrays.copyOf(data, 4));
     AthernetAddress dstAddr = new AthernetAddress(Arrays.copyOfRange(data, 4, 8));
-    short length = (short) (data[8] << 8 | data[9]);
+    short length = (short) (((data[8] & 0xFF) << 8) | (data[9] & 0xFF));
     return new AthernetPacket(srcAddr, dstAddr, Arrays.copyOfRange(data, 10, length));
   }
 
