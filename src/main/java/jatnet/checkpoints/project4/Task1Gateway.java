@@ -18,6 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class Task1Gateway {
   public LinkedBlockingQueue<byte[]> msgToSend = new LinkedBlockingQueue<>();
   public Socket dataSocket = null;
+  public BufferedReader dataReader = null;
   public Socket commSocket = null;
   public Athernet athernet = null;
 
@@ -106,8 +107,16 @@ public class Task1Gateway {
               System.out.println("Parsed addr" + addr);
               System.out.println("Numbers " + Arrays.toString(numbers));
             }
-            short port = (short) (Integer.parseInt(numbers[4]) * 256 + Integer.parseInt(numbers[5]));
-            gateway.dataSocket = new Socket(gateway.dstAddr, port);
+            byte[] ip = new byte[]{
+                (byte) Integer.parseInt(numbers[0]),
+                (byte) Integer.parseInt(numbers[1]),
+                (byte) Integer.parseInt(numbers[2]),
+                (byte) Integer.parseInt(numbers[3]),
+            };
+            InetAddress pasvAddr = InetAddress.getByAddress(ip);
+            int port = Integer.parseInt(numbers[4]) * 256 + Integer.parseInt(numbers[5]);
+            gateway.dataSocket = new Socket(pasvAddr, port);
+            gateway.dataReader = new BufferedReader(new InputStreamReader(gateway.dataSocket.getInputStream()));
           }
           msg = "C" + msg;
           System.out.println("From command" + msg);
@@ -128,15 +137,14 @@ public class Task1Gateway {
 
     @Override
     public void run() {
-      while (gateway.dataSocket == null) {
+      while (gateway.dataReader == null) {
         Thread.yield();
       }
       try {
         boolean sendEnd = false;
         Thread.sleep(1000);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(gateway.dataSocket.getInputStream()));
         while (true) {
-          String msg = reader.readLine();
+          String msg = gateway.dataReader.readLine();
           if (msg == null) {
             if (!sendEnd) {
               System.out.println("From data end");
