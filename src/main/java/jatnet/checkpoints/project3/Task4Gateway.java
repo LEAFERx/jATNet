@@ -121,11 +121,11 @@ public class Task4Gateway {
     while (true) {
       IpV4Packet echoPacket = pingResult.take();
       InetAddress srcAddr = echoPacket.getHeader().getSrcAddr();
-      short id = echoPacket.get(IcmpV4EchoPacket.class).getHeader().getSequenceNumber();
+      short seq = echoPacket.get(IcmpV4EchoPacket.class).getHeader().getSequenceNumber();
       byte[] echoData = new byte[frameSize];
       System.arraycopy(srcAddr.getAddress(), 0, echoData, 0, 4);
-      echoData[4] = (byte) ((id >> 8) & 0xFF);
-      echoData[5] = (byte) (id & 0xFF);
+      echoData[4] = (byte) ((seq >> 8) & 0xFF);
+      echoData[5] = (byte) (seq & 0xFF);
       byte[] echoPayload = echoPacket.get(UnknownPacket.class).getRawData();
       System.out.println("reply payload " + Arrays.toString(echoPayload));
       System.out.println("reply payload string " + new String(echoPayload, 0, 14, StandardCharsets.UTF_8));
@@ -136,13 +136,14 @@ public class Task4Gateway {
       byte[] data = mac.read().data;
       System.out.println(Arrays.toString(data));
       byte[] dstIP = Arrays.copyOfRange(data, 0, 4);
-      int replyId = ((data[4] & 0xFF) << 8) | (data[5] & 0xFF);
+      int replySeq = ((data[4] & 0xFF) << 8) | (data[5] & 0xFF);
       byte[] payload = Arrays.copyOfRange(data, 6, 20);
       System.out.println("payload " + Arrays.toString(payload));
       System.out.println((Inet4Address) InetAddress.getByAddress(dstIP));
       payloadBuilder.rawData(payload);
       ipv4Builder.dstAddr((Inet4Address) InetAddress.getByAddress(dstIP));
-      icmpV4EchoReplyBuilder.sequenceNumber((short) replyId);
+      icmpV4EchoReplyBuilder.sequenceNumber((short) replySeq)
+          .identifier(echoPacket.get(IcmpV4EchoPacket.class).getHeader().getIdentifier());
       EthernetPacket packet = ethernetBuilder.build();
       sendHandle.sendPacket(packet);
     }
