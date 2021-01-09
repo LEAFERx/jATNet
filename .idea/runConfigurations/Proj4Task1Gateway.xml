@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Task3Gateway" type="Application" factoryName="Application" nameIsGenerated="true">
-    <option name="MAIN_CLASS_NAME" value="jatnet.checkpoints.project3.Task3Gateway" />
+  <configuration default="false" name="Proj4Task1Gateway" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="jatnet.checkpoints.project4.Task1Gateway" />
     <module name="jATNet.main" />
     <option name="VM_PARAMETERS" value="-Djava.library.path=libs/asio" />
     <method v="2">

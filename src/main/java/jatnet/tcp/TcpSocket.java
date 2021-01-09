@@ -1,6 +1,7 @@
 package jatnet.tcp;
 
 import jatnet.athernet.AthernetAddress;
+import org.pcap4j.packet.TcpMaximumSegmentSizeOption;
 import org.pcap4j.packet.TcpPacket;
 import org.pcap4j.packet.UnknownPacket;
 import org.pcap4j.packet.namednumber.TcpPort;
@@ -8,6 +9,8 @@ import org.pcap4j.packet.namednumber.TcpPort;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TcpSocket {
@@ -16,11 +19,11 @@ public class TcpSocket {
   private final LinkedBlockingQueue<byte[]> buffer = new LinkedBlockingQueue<>();
 
   int dest;
-  private State state;
+  private State state = State.CLOSED;
   private short dstPort;
   private Inet4Address address;
   private AthernetAddress athernetAddress;
-  private int sequence = 0;
+  private int sequence = 1955;
   private int acknowledgement;
   private int acked = 0;
 
@@ -67,18 +70,32 @@ public class TcpSocket {
     if (header.getSyn() || header.getFin()) {
       acknowledgement += 1;
     }
+    if (header.getAck()) {
+      System.out.println("got an ack with acked " + header.getAcknowledgmentNumber());
+      acked = header.getAcknowledgmentNumber();
+    }
     switch (state) {
       case CLOSED:
         // Drop
         break;
       case SYN_SENT:
         if (header.getSyn() && header.getAck()) {
+          acknowledgement = header.getSequenceNumber() + 1;
           sendAck();
           state = State.ESTABLISHED;
         }
         break;
       case ESTABLISHED:
-        buffer.put(packet.getPayload().getRawData());
+        acknowledgement = header.getSequenceNumber();
+        if (header.getSyn() || header.getFin()) {
+          acknowledgement += 1;
+        }
+        if (packet.getPayload() != null) {
+          byte[] rawData = packet.getPayload().getRawData();
+          System.out.println("Got data " + Arrays.toString(rawData));
+          acknowledgement += rawData.length;
+          buffer.put(rawData);
+        }
         sendAck();
         if (header.getFin()) {
           state = State.CLOSE_WAIT;
@@ -108,9 +125,6 @@ public class TcpSocket {
         break;
       default:
         break;
-    }
-    if (header.getAck()) {
-      acked = header.getAcknowledgmentNumber();
     }
   }
 
@@ -150,7 +164,9 @@ public class TcpSocket {
         .sequenceNumber(sequence)
         .acknowledgmentNumber(acknowledgement)
         .dataOffset((byte) 20)
-        .window((short) 1000)
+        .window((short) 65535)
+        .ack(true)
+        .psh(true)
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();
@@ -173,7 +189,7 @@ public class TcpSocket {
         .acknowledgmentNumber(acknowledgement)
         .dataOffset((byte) 20)
         .ack(true)
-        .window((short) 1000)
+        .window((short) 65535)
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();
@@ -190,6 +206,10 @@ public class TcpSocket {
     UnknownPacket.Builder ub = new UnknownPacket.Builder();
     ub.rawData(new byte[]{});
     TcpPacket.Builder builder = new TcpPacket.Builder();
+    ArrayList<TcpPacket.TcpOption> options = new ArrayList<>();
+    TcpMaximumSegmentSizeOption.Builder mssBuilder = new TcpMaximumSegmentSizeOption.Builder();
+    mssBuilder.maxSegSize((short) 1460).length((byte) 4).correctLengthAtBuild(true);
+    options.add(mssBuilder.build());
     builder
         .payloadBuilder(ub)
         .srcAddr(InetAddress.getByAddress(new byte[]{0, 0, 0, 0}))
@@ -197,10 +217,11 @@ public class TcpSocket {
         .srcPort(new TcpPort(srcPort, "srcPort"))
         .dstPort(new TcpPort(dstPort, "dstPort"))
         .sequenceNumber(sequence)
-        .acknowledgmentNumber(acknowledgement)
+        .acknowledgmentNumber(0)
         .dataOffset((byte) 20)
         .syn(true)
-        .window((short) 1000)
+        .window((short) 65535)
+        // .options(options)
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();
@@ -221,10 +242,10 @@ public class TcpSocket {
         .srcPort(new TcpPort(srcPort, "srcPort"))
         .dstPort(new TcpPort(dstPort, "dstPort"))
         .sequenceNumber(sequence)
-        .acknowledgmentNumber(acknowledgement)
+        .acknowledgmentNumber(0)
         .dataOffset((byte) 20)
         .fin(true)
-        .window((short) 1000)
+        .window((short) 65535)
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();

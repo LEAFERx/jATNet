@@ -14,18 +14,22 @@ public class TcpTestAthernetNode {
     int frameSize = 64;
     int gatewayMacAddr = 0;
     int nodeMacAddr = 1;
-    short nodePort = 18976;
+    short nodePort = 18992;
     AthernetAddress gatewayAddr = new AthernetAddress(new byte[]{(byte) 192, (byte) 168, 1, 1});
     AthernetAddress nodeAddr = new AthernetAddress(new byte[]{(byte) 192, (byte) 168, 1, 2});
-    InetAddress dstAddr = InetAddress.getByAddress(new byte[]{10, 15, 45, 53});
+    InetAddress dstAddr = InetAddress.getByAddress(new byte[]{(byte) 90, (byte) 130, (byte) 70, 73});
+    // InetAddress dstAddr = InetAddress.getByAddress(new byte[]{(byte) 202, 120, (byte) 58, (byte) 157});
 
-    Mac mac = new Mac(nodeMacAddr, frameSize, 200, 10);
+    Mac mac = new Mac(nodeMacAddr, frameSize, 400, 20);
     Athernet athernet = new Athernet(nodeAddr, mac);
     Tcp tcp = new Tcp(athernet);
     tcp.start();
     TcpSocket socket = new TcpSocket(tcp, nodePort);
-    if (socket.connect(gatewayMacAddr, dstAddr, (short) 80)) {
-      if (socket.send("GET /".getBytes(StandardCharsets.UTF_8))) {
+    if (socket.connect(gatewayMacAddr, dstAddr, (short) 21)) {
+      Thread.sleep(2000);
+      if (socket.send("USER anonymous\r\n".getBytes(StandardCharsets.UTF_8))) {
+        socket.send("PASS a@a.com\r\n".getBytes(StandardCharsets.UTF_8));
+        socket.send("PWD\r\n".getBytes(StandardCharsets.UTF_8));
         byte[] data = socket.read();
         if (data != null) {
           System.out.println("Got data " + Arrays.toString(data));

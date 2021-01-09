@@ -43,7 +43,7 @@ public class PhysicalReceiver implements Runnable {
 
     float[] previousData = null;
 
-    float syncPowerThreshold = 0.01f;
+    float syncPowerThreshold = 0.008f;
 
     while (!Thread.currentThread().isInterrupted()) {
       try {

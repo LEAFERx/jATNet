@@ -3,11 +3,11 @@ package jatnet.tcp;
 import jatnet.athernet.Athernet;
 import jatnet.athernet.AthernetAddress;
 import jatnet.athernet.AthernetPacket;
-import org.pcap4j.packet.Packet;
+import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.TcpPacket;
-import org.pcap4j.packet.UnknownPacket;
 
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,21 +61,20 @@ public class Tcp implements Runnable {
 
   @Override
   public void run() {
-    UnknownPacket.Builder builder = new UnknownPacket.Builder();
     while (!Thread.currentThread().isInterrupted()) {
       try {
         AthernetPacket athernetPacket = athernet.receive();
-        builder.rawData(athernetPacket.getPayload());
-        Packet packet = builder.build();
-        if (packet.contains(TcpPacket.class)) {
-          TcpPacket tcpPacket = packet.get(TcpPacket.class);
-          short dstPort = tcpPacket.getHeader().getDstPort().value();
-          TcpSocket socket = socketMap.get(dstPort);
-          if (socket != null) {
-            socket.onNewPacket(athernetPacket.getSrcAddr(), tcpPacket);
-          }
+        System.out.println("got packet");
+        byte[] rawData = athernetPacket.getPayload();
+        System.out.println(Arrays.toString(rawData));
+        TcpPacket tcpPacket = TcpPacket.newPacket(rawData, 0, rawData.length);
+        short dstPort = tcpPacket.getHeader().getDstPort().value();
+        System.out.println("dst port is " + dstPort);
+        TcpSocket socket = socketMap.get(dstPort);
+        if (socket != null) {
+          socket.onNewPacket(athernetPacket.getSrcAddr(), tcpPacket);
         }
-      } catch (InterruptedException | UnknownHostException e) {
+      } catch (InterruptedException | UnknownHostException | IllegalRawDataException e) {
         break;
       }
     }

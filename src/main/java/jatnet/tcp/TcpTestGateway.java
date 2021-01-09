@@ -48,6 +48,7 @@ public class TcpTestGateway {
     final PcapHandle sendHandle = nif.openLive(65536, PcapNetworkInterface.PromiscuousMode.PROMISCUOUS, 10);
     captureHandle.setFilter("tcp", BpfProgram.BpfCompileMode.OPTIMIZE);
 
+    UnknownPacket.Builder payloadBuilder = new UnknownPacket.Builder();
     TcpPacket.Builder tcpBuilder = new TcpPacket.Builder();
     IpV4Packet.Builder ipv4Builder = new IpV4Packet.Builder();
     ipv4Builder
@@ -116,7 +117,9 @@ public class TcpTestGateway {
       System.out.println(Arrays.toString(rawData));
       TcpPacket tcpPacket = TcpPacket.newPacket(rawData, 0, rawData.length);
       TcpPacket.TcpHeader header = tcpPacket.getHeader();
+      payloadBuilder.rawData(tcpPacket.getPayload().getRawData());
       tcpBuilder
+          .payloadBuilder(payloadBuilder)
           .srcAddr(address)
           .dstAddr(dstAddr)
           .srcPort(header.getSrcPort())

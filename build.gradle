@@ -154,3 +154,11 @@ task task3Gateway {
         println 'Use IDEA configuration Task3Gateway instead!'
     }
 }
+
+task task1AtnernetNode(type: JavaExec) {
+    group = 'Project4'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.checkpoints.project4.Task1AthernetNode'
+    systemProperty 'java.library.path', 'libs/asio'
+    standardInput = System.in
+}
