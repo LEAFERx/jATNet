@@ -22,13 +22,6 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
 
-task testPhysical(type: JavaExec) {
-    group = 'test'
-    classpath = sourceSets.main.runtimeClasspath
-    main = 'jatnet.physical.Physical'
-    systemProperty 'java.library.path', 'libs/asio'
-}
-
 task pingTx(type: JavaExec) {
     group = 'test'
     classpath = sourceSets.main.runtimeClasspath
@@ -53,6 +46,14 @@ task testMacTx(type: JavaExec) {
     args 'tx'
 }
 
+task testMacRx(type: JavaExec) {
+    group = 'test'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.mac.MacTest'
+    systemProperty 'java.library.path', 'libs/asio'
+    args 'rx'
+}
+
 task testAthernetRx(type: JavaExec) {
     group = 'test'
     classpath = sourceSets.main.runtimeClasspath
@@ -74,15 +75,14 @@ task testTcpAthernetNode(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'jatnet.tcp.TcpTestAthernetNode'
     systemProperty 'java.library.path', 'libs/asio'
-    args 'tx'
 }
 
-task testMacRx(type: JavaExec) {
+task testTcpGateway(type: JavaExec) {
     group = 'test'
     classpath = sourceSets.main.runtimeClasspath
-    main = 'jatnet.mac.MacTest'
+    main = 'jatnet.tcp.TcpTestGateway'
     systemProperty 'java.library.path', 'libs/asio'
-    args 'rx'
+    standardInput = System.in
 }
 
 task task1Rx(type: JavaExec) {
@@ -132,7 +132,6 @@ task task2Cp2Gateway(type: JavaExec) {
     systemProperty 'java.library.path', 'libs/asio'
 }
 
-
 task task2Cp2InternetNode(type: JavaExec) {
     group = 'Project3'
     classpath = sourceSets.main.runtimeClasspath
@@ -147,18 +146,41 @@ task task3AtnernetNode(type: JavaExec) {
     systemProperty 'java.library.path', 'libs/asio'
 }
 
-task task3Gateway {
+task task3Gateway(type: JavaExec) {
     group = 'Project3'
-    doFirst {
-        println 'Pcap4J selectNetworkInterface seems to broken when in gradle task context.'
-        println 'Use IDEA configuration Task3Gateway instead!'
-    }
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.checkpoints.project3.Task3Gateway'
+    systemProperty 'java.library.path', 'libs/asio'
+    standardInput = System.in
+}
+
+task task4AtnernetNode(type: JavaExec) {
+    group = 'Project3'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.checkpoints.project3.Task4AthernetNode'
+    systemProperty 'java.library.path', 'libs/asio'
+}
+
+task task4Gateway(type: JavaExec) {
+    group = 'Project3'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.checkpoints.project3.Task4Gateway'
+    systemProperty 'java.library.path', 'libs/asio'
+    standardInput = System.in
 }
 
 task task1AtnernetNode(type: JavaExec) {
     group = 'Project4'
     classpath = sourceSets.main.runtimeClasspath
     main = 'jatnet.checkpoints.project4.Task1AthernetNode'
+    systemProperty 'java.library.path', 'libs/asio'
+    standardInput = System.in
+}
+
+task task1Gateway(type: JavaExec) {
+    group = 'Project4'
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'jatnet.checkpoints.project4.Task1Gateway'
     systemProperty 'java.library.path', 'libs/asio'
     standardInput = System.in
 }

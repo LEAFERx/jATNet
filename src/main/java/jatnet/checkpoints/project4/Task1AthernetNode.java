@@ -5,6 +5,9 @@ import jatnet.athernet.AthernetAddress;
 import jatnet.athernet.AthernetPacket;
 import jatnet.mac.Mac;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -12,6 +15,7 @@ import java.util.Scanner;
 
 public class Task1AthernetNode {
   public Athernet athernet;
+  public String currentFileTarget = "";
 
   public static void main(String[] args) throws UnknownHostException, InterruptedException {
     int frameSize = 64;
@@ -40,6 +44,9 @@ public class Task1AthernetNode {
       if (msg != null) {
         msg = msg.trim();
         if (msg.length() > 0) {
+          if (msg.startsWith("RETR ")) {
+            node.currentFileTarget = msg.substring(5);
+          }
           byte[] data = msg.getBytes(StandardCharsets.UTF_8);
           if (!athernet.send(gatewayMacAddr, gatewayAddr, data)) {
             System.out.println("Athernet send failed!");
@@ -61,18 +68,33 @@ public class Task1AthernetNode {
     @Override
     public void run() {
       try {
+        StringBuilder fileContent = new StringBuilder();
         while (true) {
           AthernetPacket ap = node.athernet.receive();
           String msg = new String(ap.getPayload(), StandardCharsets.UTF_8);
           if (msg.startsWith("D")) {
+            fileContent.append(msg.substring(1));
+            fileContent.append("\n");
             System.out.println("Message from data link: " + msg.substring(1));
           } else if (msg.startsWith("C")) {
             System.out.println("Message from command link: " + msg.substring(1));
           } else if (msg.equals("END")) {
             System.out.println("Data link end!");
+            if (!node.currentFileTarget.isEmpty()) {
+              File file = new File(node.currentFileTarget);
+              if (file.createNewFile()) {
+                System.out.println("Created " + node.currentFileTarget);
+              } else {
+                System.out.println("File " + node.currentFileTarget + " already exists!");
+              }
+              FileWriter writer = new FileWriter(node.currentFileTarget);
+              writer.write(fileContent.toString());
+              writer.close();
+            }
+            fileContent = new StringBuilder();
           }
         }
-      } catch (InterruptedException e) {
+      } catch (InterruptedException | IOException e) {
         e.printStackTrace();
       }
     }
