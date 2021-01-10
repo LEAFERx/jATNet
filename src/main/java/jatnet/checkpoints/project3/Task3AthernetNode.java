@@ -12,7 +12,8 @@ import java.util.Arrays;
 public class Task3AthernetNode {
   public static void main(String[] args) throws InterruptedException, UnknownHostException {
     final byte[] srcIP = {(byte) 192, (byte) 168, 1, 2};
-    final byte[] dstIP = {119, 75, (byte) 217, 26};
+    // final byte[] dstIP = {119, 75, (byte) 217, 26};
+    final byte[] dstIP = {(byte) 10, (byte) 20, (byte) 93, (byte) 61};
 
     int frameSize = 20;
 
@@ -36,14 +37,14 @@ public class Task3AthernetNode {
       byte[] replyPayload = Arrays.copyOfRange(replyData, 10, 10);
       System.out.println("Receive ICMP Echo Reply from ip " + InetAddress.getByAddress(replySrcIP));
       System.out.println("Destination ip " + InetAddress.getByAddress(replyDstIP));
-      System.out.println("Raw payload " + Arrays.toString(replyPayload));
-      int j = 0;
-      for (; j < replyPayload.length; j++) {
-        if (replyPayload[j] == 0) {
-          break;
-        }
-      }
-      System.out.println("String payload " + new String(replyPayload, 0, j, StandardCharsets.UTF_8));
+      // System.out.println("Raw payload " + Arrays.toString(replyPayload));
+      // int j = 0;
+      // for (; j < replyPayload.length; j++) {
+      //   if (replyPayload[j] == 0) {
+      //     break;
+      //   }
+      // }
+      // System.out.println("String payload " + new String(replyPayload, 0, j, StandardCharsets.UTF_8));
       double ping = (System.nanoTime() - time) / 1000000.0;
       System.out.println("Ping " + ping + "ms");
       Thread.sleep(1000);

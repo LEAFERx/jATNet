@@ -75,6 +75,7 @@ task testTcpAthernetNode(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     main = 'jatnet.tcp.TcpTestAthernetNode'
     systemProperty 'java.library.path', 'libs/asio'
+    standardInput = System.in
 }
 
 task testTcpGateway(type: JavaExec) {

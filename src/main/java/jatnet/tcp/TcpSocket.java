@@ -17,6 +17,9 @@ public class TcpSocket {
   private final Tcp tcp;
   private final short srcPort;
   private final LinkedBlockingQueue<byte[]> buffer = new LinkedBlockingQueue<>();
+  private final LinkedBlockingQueue<TcpPacket> sendBuffer = new LinkedBlockingQueue<>();
+
+  private final Thread sendThread;
 
   int dest;
   private State state = State.CLOSED;
@@ -30,6 +33,8 @@ public class TcpSocket {
   public TcpSocket(Tcp tcp, short port) {
     this.tcp = tcp;
     this.srcPort = port;
+    this.sendThread = new Thread(new SendThread(this));
+    this.sendThread.start();
     tcp.register(port, this);
   }
 
@@ -170,9 +175,7 @@ public class TcpSocket {
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();
-    if (!tcp.send(dest, athernetAddress, packet)) {
-      throw new InterruptedException();
-    }
+    sendBuffer.put(packet);
   }
 
   private void sendAck(byte[] data) throws InterruptedException, UnknownHostException {
@@ -193,9 +196,7 @@ public class TcpSocket {
         .correctChecksumAtBuild(true)
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();
-    if (!tcp.send(dest, athernetAddress, packet)) {
-      throw new InterruptedException();
-    }
+    sendBuffer.put(packet);
   }
 
   private void sendAck() throws InterruptedException, UnknownHostException {
@@ -226,9 +227,7 @@ public class TcpSocket {
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();
     sequence += 1;
-    if (!tcp.send(dest, athernetAddress, packet)) {
-      throw new InterruptedException();
-    }
+    sendBuffer.put(packet);
   }
 
   private void sendFin() throws InterruptedException, UnknownHostException {
@@ -250,9 +249,7 @@ public class TcpSocket {
         .correctLengthAtBuild(true);
     TcpPacket packet = builder.build();
     sequence += 1;
-    if (!tcp.send(dest, athernetAddress, packet)) {
-      throw new InterruptedException();
-    }
+    sendBuffer.put(packet);
   }
 
   public enum State {
@@ -264,5 +261,28 @@ public class TcpSocket {
     CLOSING,
     CLOSE_WAIT,
     LAST_ACK
+  }
+
+  private static class SendThread implements Runnable {
+    private final TcpSocket socket;
+
+    SendThread(TcpSocket socket) {
+      this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+      try {
+        while (true) {
+          TcpPacket packet = socket.sendBuffer.take();
+          while (!socket.tcp.send(socket.dest, socket.athernetAddress, packet)) {
+            System.out.println("TCP send failed! Retrying...");
+            Thread.yield();
+          }
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
   }
 }

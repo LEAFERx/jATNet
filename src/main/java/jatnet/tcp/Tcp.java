@@ -7,7 +7,6 @@ import org.pcap4j.packet.IllegalRawDataException;
 import org.pcap4j.packet.TcpPacket;
 
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,12 +63,9 @@ public class Tcp implements Runnable {
     while (!Thread.currentThread().isInterrupted()) {
       try {
         AthernetPacket athernetPacket = athernet.receive();
-        System.out.println("got packet");
         byte[] rawData = athernetPacket.getPayload();
-        System.out.println(Arrays.toString(rawData));
         TcpPacket tcpPacket = TcpPacket.newPacket(rawData, 0, rawData.length);
         short dstPort = tcpPacket.getHeader().getDstPort().value();
-        System.out.println("dst port is " + dstPort);
         TcpSocket socket = socketMap.get(dstPort);
         if (socket != null) {
           socket.onNewPacket(athernetPacket.getSrcAddr(), tcpPacket);
